@@ -115,7 +115,7 @@ private[mongreldb] object Json:
       expect('{')
       val b = Map.newBuilder[String, Any]
       skipWs()
-      if peek() == '}' then pos += 1; return b.result()
+      if peek() == '}' then { pos += 1; return b.result() }
       while true do
         skipWs()
         val key = readString()
@@ -132,7 +132,7 @@ private[mongreldb] object Json:
       expect('[')
       val b = List.newBuilder[Any]
       skipWs()
-      if peek() == ']' then pos += 1; return b.result()
+      if peek() == ']' then { pos += 1; return b.result() }
       while true do
         b += readValue()
         skipWs()
@@ -173,12 +173,12 @@ private[mongreldb] object Json:
       throw QueryException("mongreldb: unterminated string")
 
     def readBool(): Boolean =
-      if src.startsWith("true", pos) then pos += 4; true
-      else if src.startsWith("false", pos) then pos += 5; false
+      if src.startsWith("true", pos) then { pos += 4; true }
+      else if src.startsWith("false", pos) then { pos += 5; false }
       else throw QueryException(s"mongreldb: invalid literal at $pos")
 
     def readNull(): Any =
-      if src.startsWith("null", pos) then pos += 4; null
+      if src.startsWith("null", pos) then { pos += 4; null }
       else throw QueryException(s"mongreldb: invalid literal at $pos")
 
     def readNumber(): Any =
