@@ -75,7 +75,8 @@ import dev.visorcraft.mongreldb.MongrelDB
 // Connect to a running mongreldb-server daemon.
 val db = MongrelDB("http://127.0.0.1:8453")
 
-// Create a table. Column ids are stable on-wire identifiers.
+// Create a table. Column ids are stable on-wire identifiers. Column maps also
+// pass typed default_value scalars and dynamic default_expr ("now"/"uuid").
 db.createTable("orders", List(
   Map("id" -> 1, "name" -> "id",       "ty" -> "int64",   "primary_key" -> true,  "nullable" -> false),
   Map("id" -> 2, "name" -> "customer", "ty" -> "varchar", "primary_key" -> false, "nullable" -> false),

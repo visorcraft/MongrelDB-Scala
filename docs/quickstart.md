@@ -1,5 +1,9 @@
 # Quickstart
 
+Column maps pass schema keys through unchanged. `default_value` accepts any
+JSON scalar; supply the type expected by the column. Use `default_expr ->
+"now"` or `"uuid"` for a dynamic default.
+
 Zero to a running MongrelDB Scala program. This guide assumes a fresh machine
 and walks through installing the prerequisites, starting the daemon, and writing
 a complete program.
