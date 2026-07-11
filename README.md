@@ -80,6 +80,12 @@ db.createTable("orders", List(
   Map("id" -> 1, "name" -> "id",       "ty" -> "int64",   "primary_key" -> true,  "nullable" -> false),
   Map("id" -> 2, "name" -> "customer", "ty" -> "varchar", "primary_key" -> false, "nullable" -> false),
   Map("id" -> 3, "name" -> "amount",   "ty" -> "float64", "primary_key" -> false, "nullable" -> false),
+), constraints = Map(
+  "checks" -> List(Map(
+    "id" -> 1,
+    "name" -> "ck_customer",
+    "expr" -> Map("IsNotNull" -> 2),
+  )),
 ))
 
 // Insert rows (cells map column id -> value).
@@ -168,7 +174,7 @@ try {
 | `MongrelDB(url)` / `MongrelDB(url, token)` / `MongrelDB(url, token, user, pass)` | Construct a client (`url` defaults to `http://127.0.0.1:8453`) |
 | `health: Boolean` | Check daemon health |
 | `tableNames: List[String]` | List table names |
-| `createTable(name, columns): Long` | Create a table; returns the table id |
+| `createTable(name, columns, constraints = Map.empty): Long` | Create a table; returns the table id |
 | `dropTable(name): Unit` | Drop a table |
 | `count(table): Long` | Row count |
 | `put(table, cells, idempotencyKey): Map` | Insert a row |

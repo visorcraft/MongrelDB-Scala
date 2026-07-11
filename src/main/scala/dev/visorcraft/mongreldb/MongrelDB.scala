@@ -62,10 +62,15 @@ final class MongrelDB private (
   /** Creates a table named `name` with the given columns and returns the assigned
     * table id. Each column is a `Map[String, Any]` sent verbatim to the daemon.
     */
-  def createTable(name: String, columns: List[Map[String, Any]]): Long =
+  def createTable(
+      name: String,
+      columns: List[Map[String, Any]],
+      constraints: Map[String, Any] = Map.empty
+  ): Long =
     require(name != null, "name")
     require(columns != null, "columns")
-    val payload: Map[String, Any] = Map("name" -> name, "columns" -> columns)
+    require(constraints != null, "constraints")
+    val payload = MongrelDB.createTablePayload(name, columns, constraints)
     val body = post("/kit/create_table", payload)
     val parsed = if body.isEmpty then null else Json.parse(body)
     parsed match
@@ -324,6 +329,14 @@ object MongrelDB:
 
   private def defaultHttpClient(): HttpClient =
     HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build()
+
+  private[mongreldb] def createTablePayload(
+      name: String,
+      columns: List[Map[String, Any]],
+      constraints: Map[String, Any]
+  ): Map[String, Any] =
+    val payload = Map[String, Any]("name" -> name, "columns" -> columns)
+    if constraints.isEmpty then payload else payload.updated("constraints", constraints)
 
   // ── Shared decode helpers (used by Transaction/QueryBuilder too) ─────────
 
