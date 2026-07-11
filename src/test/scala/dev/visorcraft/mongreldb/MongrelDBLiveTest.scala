@@ -27,19 +27,19 @@ class MongrelDBLiveTest extends munit.FunSuite:
 
   // ── Live tests (skipped when no daemon) ─────────────────────────────────
 
-  test("health reports the daemon as healthy".taggedAs(Live)) {
+  test("health reports the daemon as healthy".tag(Live)) {
     assumeDaemon()
     assertEquals(db.health, true)
   }
 
-  test("createTable + count round-trip".taggedAs(Live)) {
+  test("createTable + count round-trip".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_create")
     freshTable(name, intCol(1, "id", pk = true), floatCol(2, "amount"))
     assertEquals(db.count(name), 0L)
   }
 
-  test("put + count round-trip".taggedAs(Live)) {
+  test("put + count round-trip".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_put")
     freshTable(name, intCol(1, "id", pk = true), floatCol(2, "amount"))
@@ -48,7 +48,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(db.count(name), 2L)
   }
 
-  test("query by primary key".taggedAs(Live)) {
+  test("query by primary key".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_pk")
     freshTable(name, intCol(1, "id", pk = true))
@@ -59,7 +59,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(cellLong(rows.head, 1L), 42L)
   }
 
-  test("query with a range condition using friendly aliases".taggedAs(Live)) {
+  test("query with a range condition using friendly aliases".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_range")
     freshTable(name, intCol(1, "id", pk = true), intCol(2, "amount"))
@@ -77,7 +77,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     }
   }
 
-  test("upsert updates on a primary-key conflict".taggedAs(Live)) {
+  test("upsert updates on a primary-key conflict".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_upsert")
     freshTable(name, intCol(1, "id", pk = true), intCol(2, "amount"))
@@ -90,7 +90,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(cellLong(rows.head, 2L), 999L)
   }
 
-  test("batch transaction: put + commit".taggedAs(Live)) {
+  test("batch transaction: put + commit".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_txn")
     freshTable(name, intCol(1, "id", pk = true))
@@ -104,7 +104,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(db.count(name), 3L)
   }
 
-  test("transaction rollback discards staged ops".taggedAs(Live)) {
+  test("transaction rollback discards staged ops".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_rb")
     freshTable(name, intCol(1, "id", pk = true))
@@ -115,7 +115,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(db.count(name), 0L)
   }
 
-  test("idempotent put does not duplicate the row".taggedAs(Live)) {
+  test("idempotent put does not duplicate the row".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_idem")
     freshTable(name, intCol(1, "id", pk = true))
@@ -125,7 +125,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(db.count(name), 1L)
   }
 
-  test("deleteByPk removes a row".taggedAs(Live)) {
+  test("deleteByPk removes a row".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_del")
     freshTable(name, intCol(1, "id", pk = true))
@@ -135,7 +135,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(db.count(name), 0L)
   }
 
-  test("sql INSERT increases count and SELECT returns the row".taggedAs(Live)) {
+  test("sql INSERT increases count and SELECT returns the row".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_sql")
     freshTable(name, intCol(1, "id", pk = true), intCol(2, "amount"))
@@ -148,21 +148,21 @@ class MongrelDBLiveTest extends munit.FunSuite:
       assertEquals(longField(rows.head, "id"), 10L)
   }
 
-  test("tableNames lists a created table".taggedAs(Live)) {
+  test("tableNames lists a created table".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_tables")
     freshTable(name, intCol(1, "id", pk = true))
     assert(db.tableNames.contains(name))
   }
 
-  test("schema lists the created table".taggedAs(Live)) {
+  test("schema lists the created table".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_schema")
     freshTable(name, intCol(1, "id", pk = true), floatCol(2, "amount"))
     assert(db.schema.contains(name))
   }
 
-  test("schemaFor returns a single-table descriptor".taggedAs(Live)) {
+  test("schemaFor returns a single-table descriptor".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_schema_for")
     freshTable(name, intCol(1, "id", pk = true), floatCol(2, "amount"))
@@ -172,13 +172,13 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assertEquals(cols.length, 2)
   }
 
-  test("schemaFor on a nonexistent table throws NotFoundException (error 404)".taggedAs(Live)) {
+  test("schemaFor on a nonexistent table throws NotFoundException (error 404)".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_missing")
     intercept[NotFoundException] { db.schemaFor(name) }
   }
 
-  test("dropTable removes a table".taggedAs(Live)) {
+  test("dropTable removes a table".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_drop")
     freshTable(name, intCol(1, "id", pk = true))
@@ -244,7 +244,8 @@ class MongrelDBLiveTest extends munit.FunSuite:
 
   test("flattenCells produces [col_id, value, ...]") {
     val flat = MongrelDB.flattenCells(Map(1L -> "Alice", 3L -> 99.5))
-    val pairs = flat.grouped(2).map(p => (p.head, p(1))).toSeq.sortBy(_._1)
+    val pairs = flat.grouped(2).map(p => (p.head, p(1))).toSeq.sortBy(p =>
+      p.head match { case n: Number => n.longValue(); case other => 0L })
     assertEquals(pairs, Seq((1L, "Alice"), (3L, 99.5)))
   }
 
@@ -290,7 +291,7 @@ class MongrelDBLiveTest extends munit.FunSuite:
     assume(db != null, "no mongreldb-server available")
 
 object MongrelDBLiveTest:
-  val Live = munit.Tags.tag("live")
+  val Live = new munit.Tag("live")
 
   // Daemon lifecycle is managed by the fixture below.
   var db: MongrelDB = null
@@ -386,6 +387,9 @@ object MongrelDBLiveTest:
       Files.newDirectoryStream(p).asScala.foreach(deleteRecursively)
     Files.deleteIfExists(p)
 
-// Boot the daemon on class load and tear it down at JVM exit.
-MongrelDBLiveTest.boot()
-sys.addShutdownHook { MongrelDBLiveTest.shutdown() }
+  // Boot the daemon when the companion object is initialized, and tear it down
+  // at JVM exit. Running these as top-level statements at the end of the file is
+  // rejected by the Scala 3 parser; placing them in the object body achieves the
+  // same class-load effect.
+  boot()
+  sys.addShutdownHook { shutdown() }
