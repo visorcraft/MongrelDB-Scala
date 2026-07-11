@@ -450,6 +450,9 @@ object MongrelDB:
         case 409 => "constraint violation"
         case _ => s"server error ($status)"
 
+    if message.toLowerCase(java.util.Locale.ROOT).startsWith("not found:") then
+      return new NotFoundException(message, 404, code, opIndex)
+
     status match
       case 401 | 403 => new AuthException(message, status, code, opIndex)
       case 404 => new NotFoundException(message, status, code, opIndex)
