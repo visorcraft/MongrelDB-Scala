@@ -27,18 +27,15 @@ object BasicCrud:
     try
       val tid = db.createTable(table, List(
         Map("id" -> 1, "name" -> "id", "ty" -> "int64", "primary_key" -> true, "nullable" -> false),
-        Map("id" -> 2, "name" -> "role", "ty" -> "enum",
-            "enum_variants" -> List("admin", "member", "guest"),
-            "default_value" -> "member", "primary_key" -> false, "nullable" -> false),
-        Map("id" -> 3, "name" -> "name", "ty" -> "varchar", "primary_key" -> false, "nullable" -> false),
-        Map("id" -> 4, "name" -> "score", "ty" -> "float64", "default_value" -> 0,
+        Map("id" -> 2, "name" -> "name", "ty" -> "varchar", "primary_key" -> false, "nullable" -> false),
+        Map("id" -> 3, "name" -> "score", "ty" -> "float64", "default_value" -> 0,
             "primary_key" -> false, "nullable" -> false)
       ))
       println(s"Created table $table (id $tid)")
 
-      db.put(table, Map(1L -> 1L, 2L -> "admin", 3L -> "Alice", 4L -> 95.5))
-      db.put(table, Map(1L -> 2L, 3L -> "Bob", 4L -> 82.0))   // role defaults to "member"
-      db.put(table, Map(1L -> 3L, 2L -> "guest", 3L -> "Carol", 4L -> 78.3))
+      db.put(table, Map(1L -> 1L, 2L -> "Alice", 3L -> 95.5))
+      db.put(table, Map(1L -> 2L, 2L -> "Bob", 3L -> 82.0))
+      db.put(table, Map(1L -> 3L, 2L -> "Carol", 3L -> 78.3))
       println("Inserted 3 rows")
 
       println(s"Total rows: ${db.count(table)}")
@@ -47,8 +44,8 @@ object BasicCrud:
       println(s"Query returned ${all.length} rows:")
       all.foreach(row => println(s"  $row"))
 
-      db.upsert(table, Map(1L -> 1L, 2L -> "admin", 3L -> "Alice", 4L -> 100.0),
-                updateCells = Map(2L -> "admin", 3L -> "Alice", 4L -> 100.0))
+      db.upsert(table, Map(1L -> 1L, 2L -> "Alice", 3L -> 100.0),
+                updateCells = Map(2L -> "Alice", 3L -> 100.0))
       println("Upserted Alice's score to 100.0")
       println(s"Total rows after upsert: ${db.count(table)}")
 
