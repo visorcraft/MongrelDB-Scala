@@ -127,6 +127,11 @@ private[mongreldb] object Json:
           case ',' => // continue
           case '}' => return b.result()
           case c => throw QueryException(s"mongreldb: expected ',' or '}' at ${pos - 1}")
+      // Unreachable: the loop above only exits via `return` or a thrown
+      // exception. Kept so the method body type-checks as Map[String, Any]
+      // (a `while` expression is Unit), since Scala cannot prove the loop
+      // never falls through.
+      throw QueryException("mongreldb: unreachable: readObject exited its loop")
 
     def readArray(): List[Any] =
       expect('[')
@@ -140,6 +145,8 @@ private[mongreldb] object Json:
           case ',' => // continue
           case ']' => return b.result()
           case c => throw QueryException(s"mongreldb: expected ',' or ']' at ${pos - 1}")
+      // Unreachable; see readObject above.
+      throw QueryException("mongreldb: unreachable: readArray exited its loop")
 
     def readString(): String =
       expect('"')
@@ -165,7 +172,9 @@ private[mongreldb] object Json:
                   case 'u' =>
                     if pos + 4 > src.length then throw QueryException("mongreldb: bad \\u escape")
                     val hex = src.substring(pos, pos + 4); pos += 4
-                    try sb.append(hex.toInt(16).toChar)
+                    // Scala 3's StringOps.toInt takes no radix argument; parse
+                    // the 4-hex-digit escape with Integer.parseInt.
+                    try sb.append(Integer.parseInt(hex, 16).toChar)
                     catch case _: NumberFormatException =>
                       throw QueryException(s"mongreldb: bad \\u escape: $hex")
                   case other => throw QueryException(s"mongreldb: bad escape '\\$other'")
