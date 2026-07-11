@@ -263,6 +263,10 @@ Contributions are welcome. Please:
 3. Run `sbt test` before submitting.
 4. Keep the client dependency-free (Java/Scala standard library only at runtime).
 
+## History retention
+
+Use `historyRetentionEpochs`, `setHistoryRetentionEpochs`, and `earliestRetainedEpoch` with MongrelDB 0.47.1+.
+
 ## License
 
 Dual-licensed under the **MIT License** or the **Apache License, Version 2.0**,

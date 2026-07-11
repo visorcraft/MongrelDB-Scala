@@ -14,7 +14,9 @@ class CreateTableWireShapeTest extends munit.FunSuite:
         "default_value" -> "draft"
       ),
       Map[String, Any]("id" -> 3, "name" -> "retries", "ty" -> "int64", "default_value" -> 3),
-      Map[String, Any]("id" -> 4, "name" -> "created_at", "ty" -> "timestamp", "default_expr" -> "now")
+      Map[String, Any]("id" -> 4, "name" -> "created_at", "ty" -> "timestamp", "default_expr" -> "now"),
+      Map[String, Any]("id" -> 5, "name" -> "enabled", "ty" -> "bool", "default_value" -> true),
+      Map[String, Any]("id" -> 6, "name" -> "optional", "ty" -> "varchar", "default_value" -> null)
     )
     val constraints = Map[String, Any](
       "checks" -> List(Map(
@@ -32,6 +34,8 @@ class CreateTableWireShapeTest extends munit.FunSuite:
     assert(json.contains("\"default_value\":\"draft\""))
     assert(json.contains("\"default_value\":3"))
     assert(json.contains("\"default_expr\":\"now\""))
+    assert(json.contains("\"default_value\":true"))
+    assert(json.contains("\"default_value\":null"))
     assert(json.contains("\"constraints\""))
     assert(json.contains("\"checks\""))
     assert(json.contains("\"IsNotNull\":2"))

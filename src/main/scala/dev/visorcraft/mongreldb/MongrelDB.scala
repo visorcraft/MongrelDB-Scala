@@ -50,6 +50,18 @@ final class MongrelDB private (
       true
     catch case _: MongrelDBException => false
 
+  def historyRetentionEpochs: Long =
+    historyRetention("GET", null)("history_retention_epochs").asInstanceOf[Number].longValue
+
+  def earliestRetainedEpoch: Long =
+    historyRetention("GET", null)("earliest_retained_epoch").asInstanceOf[Number].longValue
+
+  def setHistoryRetentionEpochs(epochs: Long): Map[String, Any] =
+    historyRetention("PUT", Map("history_retention_epochs" -> epochs))
+
+  private def historyRetention(method: String, body: Any): Map[String, Any] =
+    Json.parse(doRequest(method, "/history/retention", body)).asInstanceOf[Map[String, Any]]
+
   /** Lists all table names in the database. */
   def tableNames: List[String] =
     val body = get("/tables")
