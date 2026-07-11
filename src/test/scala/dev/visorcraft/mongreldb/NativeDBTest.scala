@@ -20,15 +20,7 @@ class NativeDBTest extends AnyFunSuite {
     }]
   }"""
 
-  private def nativeAvailable: Boolean =
-    try
-      Class.forName("dev.visorcraft.mongreldb.native_mode.NativeDB")
-      // Trigger the static initializer which loads the native lib.
-      NativeDB.create("/tmp/_mdb_native_check_unused", SchemaJson)
-      true
-    catch
-      case _: UnsatisfiedLinkError => false
-      case _: Throwable => false
+  private def nativeAvailable: Boolean = NativeDB.nativeAvailable()
 
   private def withTempDir[A](f: Path => A): A =
     val dir = Files.createTempDirectory("mdb_native_test")
