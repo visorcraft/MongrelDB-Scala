@@ -267,6 +267,38 @@ Contributions are welcome. Please:
 
 Use `historyRetentionEpochs`, `setHistoryRetentionEpochs`, and `earliestRetainedEpoch` with MongrelDB 0.48.0+.
 
+## Native embedding (Tier 1)
+
+For in-process access with zero serialization overhead, use the `NativeDB`
+class (in `dev.visorcraft.mongreldb.native_mode`). It loads the JNI shim
+(`libmongreldb_jni`) and runs the engine directly in the JVM - no daemon
+needed.
+
+Download the prebuilt native library from the
+[MongrelDB releases](https://github.com/visorcraft/MongrelDB/releases) page
+and point at it via `MONGRELDB_NATIVE_DIR`:
+
+```sh
+export MONGRELDB_NATIVE_DIR=/path/to/native/libs
+```
+
+```scala
+import dev.visorcraft.mongreldb.native_mode.NativeDB
+
+val schemaJson = """{"tables":[{"id":1,"name":"users",...}]}"""
+
+val db = NativeDB.create("/path/to/dbdir", schemaJson)
+try
+  db.sqlRows("INSERT INTO users (id, name) VALUES (1, 'alice')")
+  val rows = db.sqlRows("SELECT id, name FROM users")
+  val arrow = db.sqlArrow("SELECT * FROM users")
+  db.migrate(migrationsJson)
+finally db.close()
+```
+
+The HTTP client (`MongrelDB`) remains the default for connecting to a shared
+daemon. Use `NativeDB` when you want the embedded experience.
+
 ## License
 
 Dual-licensed under the **MIT License** or the **Apache License, Version 2.0**,
