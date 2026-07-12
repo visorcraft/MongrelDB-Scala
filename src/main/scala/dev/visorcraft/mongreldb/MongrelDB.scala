@@ -5,6 +5,7 @@ import java.net.http.{HttpClient, HttpRequest, HttpResponse}
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.Base64
+import java.util.concurrent.atomic.AtomicLong
 import scala.jdk.CollectionConverters.*
 import scala.util.boundary
 import scala.util.boundary.break
@@ -36,8 +37,16 @@ final class MongrelDB private (
     http: HttpClient
 ):
 
-  import MongrelDB.{MaxResponseBytes, urlPathEscape, stripLeadingSlash, decodeResults, firstResult,
+  import MongrelDB.{MaxResponseBytes, urlPathEscape, stripLeadingSlash, firstResult,
                     flattenCells, trim, toException}
+
+  private val lastEpochRef = new AtomicLong(-1L)
+
+  /** The commit epoch of the most recent successful `/kit/txn` request made by
+    * this client, or `-1` when no transaction has run yet. Useful for time-travel
+    * queries with `AS OF EPOCH`.
+    */
+  def lastEpoch: Long = lastEpochRef.get()
 
   // ── Health & tables ─────────────────────────────────────────────────────
 
@@ -51,12 +60,13 @@ final class MongrelDB private (
     catch case _: MongrelDBException => false
 
   def historyRetentionEpochs: Long =
-    historyRetention("GET", null)("history_retention_epochs").asInstanceOf[Number].longValue
+    MongrelDB.u64ToLong(historyRetention("GET", null)("history_retention_epochs").asInstanceOf[Number])
 
   def earliestRetainedEpoch: Long =
-    historyRetention("GET", null)("earliest_retained_epoch").asInstanceOf[Number].longValue
+    MongrelDB.u64ToLong(historyRetention("GET", null)("earliest_retained_epoch").asInstanceOf[Number])
 
   def setHistoryRetentionEpochs(epochs: Long): Map[String, Any] =
+    require(epochs >= 0, "epochs must be non-negative")
     historyRetention("PUT", Map("history_retention_epochs" -> epochs))
 
   private def historyRetention(method: String, body: Any): Map[String, Any] =
@@ -237,18 +247,31 @@ final class MongrelDB private (
     * `Transaction` type; returns the per-operation results array.
     */
   private[mongreldb] def commitTxn(ops: List[Map[String, Any]], idempotencyKey: String): List[Map[String, Any]] =
+    commitPayload(ops, idempotencyKey)
+
+  private def commitOne(ops: List[Map[String, Any]], idempotencyKey: String): List[Map[String, Any]] =
+    commitPayload(ops, idempotencyKey)
+
+  private def commitPayload(ops: List[Map[String, Any]], idempotencyKey: String): List[Map[String, Any]] =
     if ops.isEmpty then Nil
     else
       var payload: Map[String, Any] = Map("ops" -> ops)
       if idempotencyKey != null && idempotencyKey.nonEmpty then
         payload = payload.updated("idempotency_key", idempotencyKey)
-      decodeResults(post("/kit/txn", payload))
-
-  private def commitOne(ops: List[Map[String, Any]], idempotencyKey: String): List[Map[String, Any]] =
-    var payload: Map[String, Any] = Map("ops" -> ops)
-    if idempotencyKey != null && idempotencyKey.nonEmpty then
-      payload = payload.updated("idempotency_key", idempotencyKey)
-    decodeResults(post("/kit/txn", payload))
+      Json.parse(post("/kit/txn", payload)) match
+        case m: Map[String, Any] @unchecked =>
+          m.get("epoch") match
+            case Some(n: Number) => lastEpochRef.set(MongrelDB.u64ToLong(n))
+            case _ =>
+          m.get("results") match
+            case Some(rs: List[?] @unchecked) =>
+              rs.map {
+                case r: Map[String, Any] @unchecked => r
+                case _ => Map.empty[String, Any]
+              }
+            case _ => Nil
+        case other =>
+          throw QueryException("mongreldb: decode txn response: unexpected JSON")
 
   // ── HTTP plumbing ───────────────────────────────────────────────────────
 
@@ -358,23 +381,23 @@ object MongrelDB:
   private[mongreldb] def flattenCells(cells: Map[Long, Any]): List[Any] =
     cells.flatMap { case (k, v) => List(k, v) }.toList
 
-  private[mongreldb] def decodeResults(body: Array[Byte]): List[Map[String, Any]] =
-    if trim(body).isEmpty then Nil
-    else
-      Json.parse(body) match
-        case m: Map[String, Any] @unchecked =>
-          m.get("results") match
-            case Some(rs: List[?] @unchecked) =>
-              rs.map {
-                case r: Map[String, Any] @unchecked => r
-                case _ => Map.empty[String, Any]
-              }
-            case _ => Nil
-        case other =>
-          throw QueryException("mongreldb: decode txn response: unexpected JSON")
-
   private[mongreldb] def firstResult(results: List[Map[String, Any]]): Map[String, Any] =
     results.headOption.getOrElse(Map.empty[String, Any])
+
+  /** Convert a server u64 value to a Scala `Long`, rejecting values outside the
+    * signed 64-bit range instead of silently truncating a `BigInteger`.
+    */
+  private[mongreldb] def u64ToLong(n: Number): Long =
+    n match
+      case bi: java.math.BigInteger =>
+        val maxU64 = new java.math.BigInteger("18446744073709551615")
+        if bi.signum() < 0 || bi.compareTo(maxU64) > 0 then
+          throw QueryException(s"mongreldb: u64 value out of range: $bi")
+        bi.longValueExact()
+      case other =>
+        val v = other.longValue()
+        if v < 0 then throw QueryException(s"mongreldb: unexpected negative u64 value: $v")
+        v
 
   // Percent-encode a path segment so table names containing '/', '?', '#', or
   // spaces cannot inject extra segments. Only RFC 3986 unreserved characters pass

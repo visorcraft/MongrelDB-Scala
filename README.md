@@ -109,6 +109,25 @@ println(db.count("orders")) // 2
 db.sql("UPDATE orders SET amount = 200.0 WHERE customer = 'Bob'")
 ```
 
+### Typed defaults
+
+Column maps are forwarded to the daemon verbatim. Use `default_value` for a
+static JSON scalar (string, integer, boolean, or `null`) and `default_expr`
+for the dynamic server-side defaults `"now"` or `"uuid"`. A literal `"now"` or
+`"uuid"` string is still expressed through `default_value`; `default_expr` is
+only for the dynamic behavior.
+
+```scala
+db.createTable("orders", List(
+  Map("id" -> 2, "name" -> "status",  "ty" -> "enum",    "default_value" -> "draft"),
+  Map("id" -> 3, "name" -> "retries", "ty" -> "int64",   "default_value" -> 7),
+  Map("id" -> 4, "name" -> "enabled", "ty" -> "bool",    "default_value" -> true),
+  Map("id" -> 5, "name" -> "token",   "ty" -> "varchar", "default_value" -> null),
+  Map("id" -> 6, "name" -> "created", "ty" -> "timestamp","default_expr" -> "now"),
+  Map("id" -> 7, "name" -> "tag",     "ty" -> "varchar", "default_value" -> "uuid"),
+))
+```
+
 ## Authentication
 
 ```scala
@@ -189,6 +208,10 @@ try {
 | `schemaFor(table): Map` | Single-table descriptor |
 | `compact(): Map` | Compact all tables |
 | `compactTable(table): Map` | Compact one table |
+| `historyRetentionEpochs: Long` | Current history-retention window |
+| `earliestRetainedEpoch: Long` | Oldest epoch still readable with `AS OF EPOCH` |
+| `setHistoryRetentionEpochs(epochs): Map` | Set the durable MVCC window |
+| `lastEpoch: Long` | Commit epoch of the most recent `/kit/txn` |
 | `begin(): Transaction` | Start a batch |
 
 ### `QueryBuilder`
@@ -265,7 +288,23 @@ Contributions are welcome. Please:
 
 ## History retention
 
-Use `historyRetentionEpochs`, `setHistoryRetentionEpochs`, and `earliestRetainedEpoch` with MongrelDB 0.48.0+.
+Use `historyRetentionEpochs`, `setHistoryRetentionEpochs`, and
+`earliestRetainedEpoch` with MongrelDB 0.48.0+. The retention window controls
+how far back `AS OF EPOCH` time-travel queries can read; increasing it cannot
+bring back history that has already been pruned.
+
+```scala
+// Inspect the current durable MVCC window.
+println(db.historyRetentionEpochs)  // e.g. 100
+println(db.earliestRetainedEpoch)   // e.g. 3
+
+// Widen the window. The setter returns the updated server response.
+val resp = db.setHistoryRetentionEpochs(1_000L)
+println(resp("history_retention_epochs")) // 1000
+
+// Query a past epoch. Updates committed after the chosen epoch are not visible.
+val rows = db.sql("SELECT id, amount FROM orders AS OF EPOCH 5")
+```
 
 ## Native embedding (Tier 1)
 

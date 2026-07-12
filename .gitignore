@@ -10,6 +10,9 @@ project/target/
 project/project/
 .bsp/
 
+# Locally installed toolchain (not required in source control)
+.sbt-toolchain/
+
 # Logs
 *.log
 

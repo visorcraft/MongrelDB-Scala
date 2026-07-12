@@ -178,6 +178,37 @@ class MongrelDBLiveTest extends munit.FunSuite:
     intercept[NotFoundException] { db.schemaFor(name) }
   }
 
+  test("history retention getters/setter and AS OF EPOCH round-trip".tag(Live)) {
+    assumeDaemon()
+
+    val original = db.historyRetentionEpochs
+    assert(original > 0)
+
+    try
+      db.setHistoryRetentionEpochs(1_000L)
+      assertEquals(db.historyRetentionEpochs, 1_000L)
+
+      val name = uniqueTable("scala_retention")
+      freshTable(name, intCol(1, "id", pk = true), floatCol(2, "amount"))
+
+      db.put(name, cells(1L -> 1L, 2L -> 1.0))
+      val insertEpoch = db.lastEpoch
+      assert(insertEpoch > 0)
+
+      db.upsert(name, cells(1L -> 1L, 2L -> 9.0), cells(2L -> 9.0))
+
+      val rows = db.sql(s"SELECT id, amount FROM $name AS OF EPOCH $insertEpoch")
+      assertEquals(rows.length, 1)
+      assertEquals(longField(rows.head, "id"), 1L)
+      assertEquals(rows.head("amount").asInstanceOf[Number].doubleValue, 1.0, 1e-9)
+
+      val current = db.sql(s"SELECT id, amount FROM $name")
+      assertEquals(current.length, 1)
+      assertEquals(current.head("amount").asInstanceOf[Number].doubleValue, 9.0, 1e-9)
+    finally
+      db.setHistoryRetentionEpochs(original)
+  }
+
   test("dropTable removes a table".tag(Live)) {
     assumeDaemon()
     val name = uniqueTable("scala_drop")

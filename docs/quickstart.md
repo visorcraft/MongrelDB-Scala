@@ -120,7 +120,28 @@ scala-cli run demo.scala
 | `.execute` | Sends the query and decodes the `rows` array. |
 | `db.count(table)` | GET `/tables/{name}/count`. |
 
-## 6. Common pitfalls
+## 6. History retention and time travel
+
+MongrelDB keeps a durable MVCC history window. You can inspect it, widen it,
+and query older epochs with `AS OF EPOCH`.
+
+```scala
+println(db.historyRetentionEpochs)  // current window, e.g. 100
+println(db.earliestRetainedEpoch)   // oldest readable epoch, e.g. 3
+
+// Widen the window. The response contains the updated values.
+val resp = db.setHistoryRetentionEpochs(1_000L)
+println(resp("history_retention_epochs")) // 1000
+
+// Read the table as it existed at epoch 5.
+val rows = db.sql("SELECT id, amount FROM orders AS OF EPOCH 5")
+```
+
+Increasing retention cannot restore history that has already been pruned. The
+window is a durable GC/time-travel policy, so it requires admin privileges when
+the daemon is running with auth.
+
+## 7. Common pitfalls
 
 **Using the column name instead of the column id.** Every on-wire API uses the
 numeric `id` from `createTable`, never the name. The query builder's `column`
