@@ -138,7 +138,7 @@ jobs:
         run: sbt compile
 
       - name: Run native tests
-        run: sbt "testOnly dev.visorcraft.mongreldb.NativeDBTest"
+        run: sbt "testOnly com.visorcraft.mongreldb.NativeDBTest"
         env:
           MONGRELDB_NATIVE_DIR: ${{ github.workspace }}/native-libs
           JAVA_TOOL_OPTIONS: "-Djava.library.path=${{ github.workspace }}/native-libs"
