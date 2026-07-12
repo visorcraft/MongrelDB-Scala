@@ -1,6 +1,6 @@
-package dev.visorcraft.mongreldb
+package com.visorcraft.mongreldb
 
-import dev.visorcraft.mongreldb.native_mode.NativeDB
+import com.visorcraft.mongreldb.native_mode.NativeDB
 import java.nio.file.{Files, Path}
 
 class NativeDBTest extends munit.FunSuite:

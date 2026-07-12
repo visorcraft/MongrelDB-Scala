@@ -4,7 +4,7 @@
 // standard-library `java.net.http.HttpClient`. No external runtime dependencies;
 // the only test dependency is munit (test scope only).
 
-ThisBuild / organization := "dev.visorcraft"
+ThisBuild / organization := "com.visorcraft"
 ThisBuild / organizationName := "VisorCraft LLC"
 ThisBuild / homepage := Some(url("https://github.com/visorcraft/MongrelDB-Scala"))
 ThisBuild / licenses := List("MIT" -> url("https://opensource.org/licenses/MIT"),

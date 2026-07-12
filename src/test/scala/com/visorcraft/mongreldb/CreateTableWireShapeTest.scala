@@ -1,4 +1,4 @@
-package dev.visorcraft.mongreldb
+package com.visorcraft.mongreldb
 
 class CreateTableWireShapeTest extends munit.FunSuite:
   test("createTable payload preserves column options and table checks") {

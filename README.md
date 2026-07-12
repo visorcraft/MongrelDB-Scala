@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://central.sonatype.com/artifact/dev.visorcraft/mongreldb-scala"><img src="https://img.shields.io/maven-central/v/dev.visorcraft/mongreldb-scala.svg" alt="Maven Central" /></a>
+  <a href="https://central.sonatype.com/artifact/com.visorcraft/mongreldb-scala"><img src="https://img.shields.io/maven-central/v/com.visorcraft/mongreldb-scala.svg" alt="Maven Central" /></a>
   <a href="https://www.scala-lang.org/"><img src="https://img.shields.io/badge/Scala-3.3-DC322F.svg" alt="Scala" /></a>
   <a href="https://github.com/visorcraft/MongrelDB-Scala/actions/workflows/ci.yml"><img src="https://github.com/visorcraft/MongrelDB-Scala/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="#license"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg" alt="License" /></a>
@@ -21,7 +21,7 @@
 
 | Surface | Package | Coordinates |
 |---|---|---|
-| Scala client | `dev.visorcraft.mongreldb` | `dev.visorcraft %% mongreldb-scala` |
+| Scala client | `com.visorcraft.mongreldb` | `com.visorcraft %% mongreldb-scala` |
 
 ## Requirements
 
@@ -47,13 +47,13 @@
 ### sbt
 
 ```scala
-libraryDependencies += "dev.visorcraft" %% "mongreldb-scala" % "0.1.0"
+libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.1.0"
 ```
 
 ### scala-cli
 
 ```scala
-//> using dep dev.visorcraft::mongreldb-scala:0.1.0
+//> using dep com.visorcraft::mongreldb-scala:0.1.0
 ```
 
 ## Examples
@@ -70,7 +70,7 @@ Task-focused, commented guides live in [`docs/`](docs):
 ## Quick Example
 
 ```scala
-import dev.visorcraft.mongreldb.MongrelDB
+import com.visorcraft.mongreldb.MongrelDB
 
 // Connect to a running mongreldb-server daemon.
 val db = MongrelDB("http://127.0.0.1:8453")
@@ -309,7 +309,7 @@ val rows = db.sql("SELECT id, amount FROM orders AS OF EPOCH 5")
 ## Native embedding (Tier 1)
 
 For in-process access with zero serialization overhead, use the `NativeDB`
-class (in `dev.visorcraft.mongreldb.native_mode`). It loads the JNI shim
+class (in `com.visorcraft.mongreldb.native_mode`). It loads the JNI shim
 (`libmongreldb_jni`) and runs the engine directly in the JVM - no daemon
 needed.
 
@@ -322,7 +322,7 @@ export MONGRELDB_NATIVE_DIR=/path/to/native/libs
 ```
 
 ```scala
-import dev.visorcraft.mongreldb.native_mode.NativeDB
+import com.visorcraft.mongreldb.native_mode.NativeDB
 
 val schemaJson = """{"tables":[{"id":1,"name":"users",...}]}"""
 

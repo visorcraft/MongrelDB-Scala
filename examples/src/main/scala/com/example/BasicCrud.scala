@@ -9,7 +9,7 @@
 
 package com.example
 
-import dev.visorcraft.mongreldb.MongrelDB
+import com.visorcraft.mongreldb.MongrelDB
 import java.lang.Long.toHexString
 
 object BasicCrud:

@@ -59,20 +59,20 @@ curl http://127.0.0.1:8453/health
 ```scala
 // build.sbt
 scalaVersion := "3.3.3"
-libraryDependencies += "dev.visorcraft" %% "mongreldb-scala" % "0.1.0"
+libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.1.0"
 ```
 
 ### scala-cli
 
 ```scala
 //> using scala 3.3.3
-//> using dep dev.visorcraft::mongreldb-scala:0.1.0
+//> using dep com.visorcraft::mongreldb-scala:0.1.0
 ```
 
 ## 4. Write your first program
 
 ```scala
-import dev.visorcraft.mongreldb.MongrelDB
+import com.visorcraft.mongreldb.MongrelDB
 
 object Demo:
   def main(args: Array[String]): Unit =

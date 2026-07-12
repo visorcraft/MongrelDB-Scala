@@ -9,7 +9,7 @@
 
 package com.example
 
-import dev.visorcraft.mongreldb.native_mode.NativeDB
+import com.visorcraft.mongreldb.native_mode.NativeDB
 
 object NativeBasicCrud:
   def main(args: Array[String]): Unit =
