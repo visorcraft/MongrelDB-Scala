@@ -33,6 +33,8 @@ jobs:
           distribution: temurin
           java-version: 11
 
+      - uses: sbt/setup-sbt@v1.5.0
+
       - name: Import GPG signing key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --dearmor --output /tmp/signing.gpg
