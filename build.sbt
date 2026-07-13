@@ -7,6 +7,10 @@
 ThisBuild / organization := "com.visorcraft"
 ThisBuild / organizationName := "Visorcraft"
 ThisBuild / homepage := Some(url("https://github.com/visorcraft/MongrelDB-Scala"))
+ThisBuild / scmInfo := Some(ScmInfo(
+  url("https://github.com/visorcraft/MongrelDB-Scala"),
+  "scm:git:https://github.com/visorcraft/MongrelDB-Scala.git"
+))
 ThisBuild / licenses := List("MIT" -> url("https://opensource.org/licenses/MIT"),
   "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 ThisBuild / developers := List(
