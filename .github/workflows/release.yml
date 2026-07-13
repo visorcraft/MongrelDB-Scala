@@ -1,0 +1,68 @@
+# Publishes mongreldb-scala to Maven Central on a `v*` tag push.
+#
+# The new Central Publishing Portal has no sbt plugin, so we publish to the
+# staging API via sbt's built-in publish, GPG-sign via sbt-pgp, then call the
+# Portal REST API to promote the staging repository.
+#
+# Required secrets (repo settings → Secrets and variables → Actions):
+#   CENTRAL_USERNAME  - Central Portal token username
+#   CENTRAL_PASSWORD  - Central Portal token password
+#   GPG_PRIVATE_KEY   - ASCII-armored GPG signing key (--export-secret-keys --armor)
+#   GPG_KEY_ID        - Key ID (e.g. ABCDEF1234567890)
+#   GPG_PASSPHRASE    - GPG key passphrase
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Import GPG signing key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --dearmor --output /tmp/signing.gpg
+          mkdir -p /tmp/gpg-home
+          chmod 700 /tmp/gpg-home
+          GNUPGHOME=/tmp/gpg-home gpg --batch --import /tmp/signing.gpg
+
+      - name: Publish to Central staging repository
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          PGP_SECRET: ${{ secrets.GPG_PRIVATE_KEY }}
+          PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GNUPGHOME: /tmp/gpg-home
+        run: sbt -batch -v ci-release || sbt -batch publishSigned
+
+      - name: Publish staging deployment via Portal API
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          AUTH="$CENTRAL_USERNAME:$CENTRAL_PASSWORD"
+          STAGING_REPOS=$(curl -s -u "$AUTH" \
+            "https://ossrh-staging-api.central.sonatype.com/service/local/staging/profile_repositories" \
+            | python3 -c "import json,sys; data=json.load(sys.stdin); print(' '.join(r['repositoryId'] for r in data.get('data',[])))")
+          echo "Staging repos: $STAGING_REPOS"
+          for repo in $STAGING_REPOS; do
+            echo "Publishing staging repo: $repo"
+            curl -sf -u "$AUTH" -X POST \
+              "https://ossrh-staging-api.central.sonatype.com/service/local/staging/bulk/promote" \
+              -H 'Content-Type: application/json' \
+              -d "{\"data\":{\"stagedRepositoryIds\":[\"$repo\"],\"description\":\"Publish mongreldb-scala ${{ github.ref_name }}\"}}"
+          done
