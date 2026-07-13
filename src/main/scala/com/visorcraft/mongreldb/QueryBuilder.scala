@@ -30,6 +30,7 @@ final class QueryBuilder private[mongreldb] (client: MongrelDB, table: String):
   private val conditions: ListBuffer[Map[String, Any]] = ListBuffer.empty
   private var projectionList: List[Long] = null
   private var limitValue: java.lang.Long = null
+  private var offsetValue: java.lang.Long = null
   private var lastTruncated: Boolean = false
 
   /** Adds a native condition. Conditions are AND-ed together.
@@ -55,12 +56,18 @@ final class QueryBuilder private[mongreldb] (client: MongrelDB, table: String):
     this.limitValue = limit
     this
 
+  /** Skips matching rows before applying the limit. */
+  def offset(offset: Long): this.type =
+    this.offsetValue = offset
+    this
+
   /** Builds the request payload that will be sent to `/kit/query`. */
   def build(): Map[String, Any] =
     var payload: Map[String, Any] = Map("table" -> table)
     if conditions.nonEmpty then payload = payload.updated("conditions", conditions.toList)
     if projectionList != null then payload = payload.updated("projection", projectionList)
     if limitValue != null then payload = payload.updated("limit", limitValue)
+    if offsetValue != null then payload = payload.updated("offset", offsetValue)
     payload
 
   /** Runs the query and returns the matching rows. Also records whether the

@@ -1,6 +1,12 @@
 package com.visorcraft.mongreldb
 
 class CreateTableWireShapeTest extends munit.FunSuite:
+  test("query builder includes offset") {
+    val payload = new QueryBuilder(null, "orders").limit(10).offset(12).build()
+    assertEquals(payload("limit"), 10L)
+    assertEquals(payload("offset"), 12L)
+  }
+
   test("createTable payload preserves column options and table checks") {
     val columns = List(
       Map[String, Any]("id" -> 1, "name" -> "id", "ty" -> "int64", "primary_key" -> true),

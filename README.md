@@ -221,6 +221,7 @@ try {
 | `where(condType, params): this.type` | Add a native condition (AND-ed) |
 | `projection(columnIds): this.type` | Set column projection |
 | `limit(limit): this.type` | Set row limit |
+| `offset(offset): this.type` | Skip matching rows before the limit |
 | `build(): Map` | Build the request payload |
 | `execute(): List[Map]` | Run the query |
 | `truncated: Boolean` | Whether the last `execute` result hit the limit |
