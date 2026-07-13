@@ -36,9 +36,10 @@ jobs:
       - name: Import GPG signing key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --dearmor --output /tmp/signing.gpg
-          mkdir -p /tmp/gpg-home
-          chmod 700 /tmp/gpg-home
-          GNUPGHOME=/tmp/gpg-home gpg --batch --import /tmp/signing.gpg
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          gpg --batch --import /tmp/signing.gpg
+          echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --edit-key ${{ secrets.GPG_KEY_ID }} trust
 
       - name: Publish to Central staging repository
         env:
@@ -46,8 +47,7 @@ jobs:
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           PGP_SECRET: ${{ secrets.GPG_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GNUPGHOME: /tmp/gpg-home
-        run: sbt -batch -v ci-release || sbt -batch publishSigned
+        run: sbt -batch publishSigned
 
       - name: Publish staging deployment via Portal API
         env:
