@@ -2,7 +2,7 @@
 #
 # The new Central Publishing Portal has no sbt plugin, so we publish to the
 # staging API via sbt's built-in publish, GPG-sign via sbt-pgp, then call the
-# Portal REST API to promote the staging repository.
+# compatibility API to transfer it into an automatic Portal deployment.
 #
 # Required secrets (repo settings → Secrets and variables → Actions):
 #   CENTRAL_USERNAME  - Central Portal token username
@@ -56,15 +56,7 @@ jobs:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
         run: |
-          AUTH="$CENTRAL_USERNAME:$CENTRAL_PASSWORD"
-          STAGING_REPOS=$(curl -s -u "$AUTH" \
-            "https://ossrh-staging-api.central.sonatype.com/service/local/staging/profile_repositories" \
-            | python3 -c "import json,sys; data=json.load(sys.stdin); print(' '.join(r['repositoryId'] for r in data.get('data',[])))")
-          echo "Staging repos: $STAGING_REPOS"
-          for repo in $STAGING_REPOS; do
-            echo "Publishing staging repo: $repo"
-            curl -sf -u "$AUTH" -X POST \
-              "https://ossrh-staging-api.central.sonatype.com/service/local/staging/bulk/promote" \
-              -H 'Content-Type: application/json' \
-              -d "{\"data\":{\"stagedRepositoryIds\":[\"$repo\"],\"description\":\"Publish mongreldb-scala ${{ github.ref_name }}\"}}"
-          done
+          TOKEN=$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 | tr -d '\n')
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/com.visorcraft?publishing_type=automatic"
