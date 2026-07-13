@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
       user     <- sys.env.get("CENTRAL_USERNAME")
       password <- sys.env.get("CENTRAL_PASSWORD")
     } yield Credentials(
-      "Sonatype Nexus Repository Manager",
+      "OSSRH Staging API Service",
       "ossrh-staging-api.central.sonatype.com",
       user, password
     )).toSeq,
