@@ -47,13 +47,13 @@
 ### sbt
 
 ```scala
-libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.52.3"
+libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.53.3"
 ```
 
 ### scala-cli
 
 ```scala
-//> using dep com.visorcraft::mongreldb-scala:0.52.3
+//> using dep com.visorcraft::mongreldb-scala:0.53.3
 ```
 
 ## Examples
@@ -270,7 +270,7 @@ on `PATH`:
 ```sh
 mkdir -p bin
 curl -fsSL -o bin/mongreldb-server \
-  https://github.com/visorcraft/MongrelDB/releases/download/v0.52.3/mongreldb-server-linux-x64
+  https://github.com/visorcraft/MongrelDB/releases/download/v0.53.3/mongreldb-server-linux-x64
 chmod +x bin/mongreldb-server
 ```
 
