@@ -32,7 +32,7 @@ Fetch a prebuilt server binary from the
 ```sh
 mkdir -p bin
 curl -fsSL -o bin/mongreldb-server \
-  https://github.com/visorcraft/MongrelDB/releases/download/v0.57.0/mongreldb-server-linux-x64
+  https://github.com/visorcraft/MongrelDB/releases/download/v0.58.1/mongreldb-server-linux-x64
 chmod +x bin/mongreldb-server
 ```
 
@@ -59,14 +59,14 @@ curl http://127.0.0.1:8453/health
 ```scala
 // build.sbt
 scalaVersion := "3.3.3"
-libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.57.0"
+libraryDependencies += "com.visorcraft" %% "mongreldb-scala" % "0.58.1"
 ```
 
 ### scala-cli
 
 ```scala
 //> using scala 3.3.3
-//> using dep com.visorcraft::mongreldb-scala:0.57.0
+//> using dep com.visorcraft::mongreldb-scala:0.58.1
 ```
 
 ## 4. Write your first program
