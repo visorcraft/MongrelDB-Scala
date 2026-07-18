@@ -378,8 +378,14 @@ object MongrelDB:
   /** Flattens a column-id-to-value map to the server's flat
     * `[col_id, value, ...]` array. Pair order is not significant.
     */
+  /** Flatten a column-id-to-value map to the server's flat
+    * `[col_id, value, ...]` list in ascending column-id order.
+    * Stable ordering is required for idempotency keys: the server hashes the
+    * request payload, and unordered map iteration would make two commits of
+    * the same cells look like a reuse mismatch.
+    */
   private[mongreldb] def flattenCells(cells: Map[Long, Any]): List[Any] =
-    cells.flatMap { case (k, v) => List(k, v) }.toList
+    cells.toSeq.sortBy(_._1).flatMap { case (k, v) => List(k, v) }.toList
 
   private[mongreldb] def firstResult(results: List[Map[String, Any]]): Map[String, Any] =
     results.headOption.getOrElse(Map.empty[String, Any])
