@@ -54,3 +54,57 @@ class CreateTableWireShapeTest extends munit.FunSuite:
     assertEquals(checks.head.get("name"), Some("ck_status"))
     assertEquals(checks.head.get("expr"), Some(Map("IsNotNull" -> 2)))
   }
+
+  test("createTable payload preserves ANN index options for swappable backends") {
+    val columns = List(
+      Map[String, Any]("id" -> 1, "name" -> "id", "ty" -> "int64", "primary_key" -> true),
+      Map[String, Any]("id" -> 2, "name" -> "embedding", "ty" -> "embedding(384)")
+    )
+    // DiskANN backend with dense vectors: algorithm, quantization, and the
+    // diskann-specific hyperparameters must all survive the round-trip.
+    val indexes = List(Map[String, Any](
+      "name" -> "ann",
+      "column_id" -> 2,
+      "kind" -> "ann",
+      "predicate" -> "embedding IS NOT NULL",
+      "options" -> Map[String, Any](
+        "ann" -> Map[String, Any](
+          "algorithm" -> "diskann",
+          "quantization" -> "dense",
+          "diskann" -> Map[String, Any](
+            "r" -> 128,
+            "l" -> 256,
+            "beam_width" -> 8,
+            "alpha" -> 1.2
+          )
+        )
+      )
+    ))
+
+    val payload = MongrelDB.createTablePayload("vectors", columns, Map.empty, indexes)
+    val json = Json.toBytes(payload)
+    val parsed = Json.parse(json).asInstanceOf[Map[String, Any]]
+
+    // Indexes must reach the wire as a top-level array named "indexes".
+    val wireIndexes = parsed("indexes").asInstanceOf[List[Map[String, Any]]]
+    assertEquals(wireIndexes.length, 1)
+    val ann = wireIndexes.head
+    assertEquals(ann("kind"), "ann")
+    assertEquals(ann("predicate"), "embedding IS NOT NULL")
+
+    val annOpts = ann("options").asInstanceOf[Map[String, Any]]("ann").asInstanceOf[Map[String, Any]]
+    assertEquals(annOpts("algorithm"), "diskann")
+    assertEquals(annOpts("quantization"), "dense")
+    val diskann = annOpts("diskann").asInstanceOf[Map[String, Any]]
+    assertEquals(diskann("r"), 128L)
+    assertEquals(diskann("l"), 256L)
+    assertEquals(diskann("beam_width"), 8L)
+    assertEquals(diskann("alpha"), 1.2)
+
+    // The raw JSON must carry the algorithm and quantization markers verbatim so
+    // the daemon's ANN-backend selector can dispatch on them.
+    val raw = new String(json, java.nio.charset.StandardCharsets.UTF_8)
+    assert(raw.contains("\"algorithm\":\"diskann\""), s"missing algorithm marker: $raw")
+    assert(raw.contains("\"quantization\":\"dense\""), s"missing quantization marker: $raw")
+    assert(raw.contains("\"diskann\":{"), s"missing diskann options block: $raw")
+  }
