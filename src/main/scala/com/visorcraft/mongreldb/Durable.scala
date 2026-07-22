@@ -10,7 +10,7 @@ final case class CommitHlc(
 object CommitHlc:
   def fromMap(raw: Any): Option[CommitHlc] =
     raw match
-      case m: Map[?, ?] @unchecked =>
+      case m: Map[String, Any] @unchecked =>
         m.get("physical_micros") match
           case Some(p: Number) =>
             Some(

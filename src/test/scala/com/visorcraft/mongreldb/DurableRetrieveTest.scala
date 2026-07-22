@@ -1,9 +1,7 @@
 package com.visorcraft.mongreldb
 
-import org.scalatest.funsuite.AnyFunSuite
-
-class DurableRetrieveTest extends AnyFunSuite:
-  test("query status parses structural HLC without string parsing"):
+class DurableRetrieveTest extends munit.FunSuite:
+  test("query status parses structural HLC without string parsing") {
     val fixture: Map[String, Any] = Map(
       "query_id" -> "abcdefabcdefabcdefabcdefabcdefab",
       "status" -> "committed",
@@ -53,3 +51,4 @@ class DurableRetrieveTest extends AnyFunSuite:
     assert(CommitHlc.fromMap(null).isEmpty)
     assert(CommitHlc.fromMap(Map.empty).isEmpty)
     assert(CommitHlc.fromMap(Map("logical" -> 1)).isEmpty)
+  }

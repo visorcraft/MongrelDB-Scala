@@ -195,10 +195,10 @@ final class MongrelDB private (
   def queryStatus(queryId: String): QueryStatus =
     require(queryId != null && queryId.nonEmpty, "query_id is required")
     val body = get("/queries/" + urlPathEscape(queryId))
-    if body.isEmpty then throw new QueryException("query status response was not a JSON object")
+    if body.isEmpty then throw QueryException("query status response was not a JSON object")
     Json.parse(body) match
       case m: Map[String, Any] @unchecked => QueryStatus.fromMap(m)
-      case _ => throw new QueryException("query status response was not a JSON object")
+      case _ => throw QueryException("query status response was not a JSON object")
 
   /** Request cancellation of a running SQL query. */
   def cancelQuery(queryId: String): Map[String, Any] =
