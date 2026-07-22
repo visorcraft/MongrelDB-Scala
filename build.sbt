@@ -32,7 +32,7 @@ ThisBuild / javacOptions ++= Seq("--release", "11")
 lazy val root = (project in file("."))
   .settings(
     name := "mongreldb-scala",
-    version := "0.64.2",
+    version := "0.64.3",
     libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test,
     // The native embedded mode (JNI) has no declared build dependency.
     // NativeDB loads libmongreldb_jni at runtime via NativeLoader, which
