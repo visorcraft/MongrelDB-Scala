@@ -163,6 +163,53 @@ final class MongrelDB private (
     require(table != null, "table")
     new QueryBuilder(this, table)
 
+  // ── Durable recovery + retrieve_text (0.64+) ────────────────────────────
+
+  /** Text → embed → ANN retrieve (POST /kit/retrieve_text, 0.64+). */
+  def retrieveText(
+      table: String,
+      embeddingColumn: Int,
+      text: String,
+      k: Option[Int] = None,
+      deadlineMs: Option[Long] = None,
+      maxWork: Option[Long] = None
+  ): Map[String, Any] =
+    require(table != null && table.nonEmpty, "table is required")
+    require(text != null && text.nonEmpty, "text is required")
+    var payload: Map[String, Any] = Map(
+      "table" -> table,
+      "embedding_column" -> embeddingColumn,
+      "text" -> text
+    )
+    k.foreach(v => payload = payload + ("k" -> v))
+    deadlineMs.foreach(v => payload = payload + ("deadline_ms" -> v))
+    maxWork.foreach(v => payload = payload + ("max_work" -> v))
+    val body = post("/kit/retrieve_text", payload)
+    if body.isEmpty then Map("hits" -> Nil, "provenance" -> Map.empty)
+    else
+      Json.parse(body) match
+        case m: Map[String, Any] @unchecked => m
+        case _                              => Map("hits" -> Nil, "provenance" -> Map.empty)
+
+  /** Retained SQL status for durable recovery (GET /queries/{query_id}). */
+  def queryStatus(queryId: String): QueryStatus =
+    require(queryId != null && queryId.nonEmpty, "query_id is required")
+    val body = get("/queries/" + urlPathEscape(queryId))
+    if body.isEmpty then throw new QueryException("query status response was not a JSON object")
+    Json.parse(body) match
+      case m: Map[String, Any] @unchecked => QueryStatus.fromMap(m)
+      case _ => throw new QueryException("query status response was not a JSON object")
+
+  /** Request cancellation of a running SQL query. */
+  def cancelQuery(queryId: String): Map[String, Any] =
+    require(queryId != null && queryId.nonEmpty, "query_id is required")
+    val body = post("/queries/" + urlPathEscape(queryId) + "/cancel", Map.empty[String, Any])
+    if body.isEmpty then Map.empty
+    else
+      Json.parse(body) match
+        case m: Map[String, Any] @unchecked => m
+        case _                              => Map.empty
+
   // ── SQL ─────────────────────────────────────────────────────────────────
 
   /** Executes a SQL statement via the `/sql` endpoint, requesting JSON output.
