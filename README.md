@@ -339,6 +339,11 @@ finally db.close()
 The HTTP client (`MongrelDB`) remains the default for connecting to a shared
 daemon. Use `NativeDB` when you want the embedded experience.
 
+## Related tools
+
+- [Mongrel](https://visorcraft.com/mongreldb) — Commercial multi-system workbench with native MongrelDB support.
+- [MongrelDB Viewer](https://github.com/visorcraft/MongrelDB-Viewer) — Free, open-source MongrelDB GUI and MCP server.
+
 ## License
 
 Dual-licensed under the **MIT License** or the **Apache License, Version 2.0**,
